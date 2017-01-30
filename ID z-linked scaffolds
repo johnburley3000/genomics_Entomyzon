@@ -1,0 +1,61 @@
+setwd("/Users/johnburley/Documents/Harvard/genome_assembly3/gatk/vcfs")
+library(vcfR)
+library(pinfsc50)
+
+test <- read.csv("test.csv", sep = ",", header = TRUE)
+
+vcf_file <- system.file("extdata", "BFHE_WA336010_1_TEST.vcf.gz", package = "pinfsc50")
+vcf <- read.vcfR(vcf_file, verbose = FALSE)
+#Does not work, although the example provided online (below) does work:
+vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz", package = "pinfsc50")
+vcf <- read.vcfR(vcf_file, verbose = FALSE)
+
+## Read in my test vcf file:
+BFWA336010_test <- read.vcfR("BFHE_WA336010_1_TEST.vcf.gz", verbose = FALSE)
+## create chromR object from my test vcf (using no fasta or annotation):
+section <- create.chromR(BFWA336010_test, name = "SECTION", seq = NULL, ann = NULL,
+                         verbose = TRUE)
+# tries to process the chromR object. Fails (possibly because there is no population data, or because no seq or ann)
+section_proc <- proc.chromR(section, win.size = 1000, verbose = TRUE)
+
+head(section)
+gq <- extract.gt(section, element="GQ", as.numeric=TRUE)
+dp <- extract.gt(section, element="DP", as.numeric=TRUE)
+
+# PLOT Genotype Quality
+par( mar = c(8,4,4,2) )
+boxplot(gq, las=2, col=2:5, main="Genotype Quality (GQ)")
+# PLOT Sequence Depth
+dp2 <- dp
+dp2[ dp2 == 0 ] <- NA
+boxplot(dp2, las=2, col=2:5, main="Sequence Depth (DP)", log="y")
+abline(h=10^c(0:4), lty=3, col="#808080")
+
+#chrom <- masker(chrom, min_DP = 900, max_DP = 1500)
+chrom <- proc.chromR(chrom, verbose = FALSE)
+
+# From online example:
+vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz", package = "pinfsc50")
+dna_file <- system.file("extdata", "pinf_sc50.fasta", package = "pinfsc50")
+gff_file <- system.file("extdata", "pinf_sc50.gff", package = "pinfsc50")
+
+vcf <- read.vcfR(vcf_file, verbose = FALSE)
+dna <- ape::read.dna(dna_file, format = "fasta")
+gff <- read.table(gff_file, sep="\t", quote = "")
+
+chrom <- create.chromR(name="Supercontig", vcf=vcf, seq=dna, ann=gff, verbose=FALSE)
+#chrom <- masker(chrom, min_DP = 900, max_DP = 1500)
+chrom <- proc.chromR(chrom, verbose = TRUE)
+
+head(chrom)
+
+gq <- extract.gt(chrom, element="GQ", as.numeric=TRUE)
+dp <- extract.gt(chrom, element="DP", as.numeric=TRUE)
+
+par( mar = c(8,4,4,2) )
+boxplot(gq, las=2, col=2:5, main="Genotype Quality (GQ)")
+
+dp2 <- dp
+dp2[ dp2 == 0 ] <- NA
+boxplot(dp2, las=2, col=2:5, main="Sequence Depth (DP)", log="y")
+abline(h=10^c(0:4), lty=3, col="#808080")
