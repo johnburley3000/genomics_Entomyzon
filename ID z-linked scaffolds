@@ -1,5 +1,5 @@
 library("dplyr")
-library(readr)
+library("readr")
 
 # BAD: idx_bfhe_nsw76677 <- read.delim("idxstats_BFHE_NSW_76677_2.txt", header = FALSE, sep = " ")
 
@@ -14,7 +14,7 @@ idx_bf_nsw <- read_delim("~/Documents/Harvard/genome_assembly3/scaffold coverage
 idx_wt_nsw <- read_delim("~/Documents/Harvard/genome_assembly3/scaffold coverage/idxstats_WTHE_NSW_76665.txt", 
                         "\t", escape_double = FALSE, col_names = FALSE)
 
-
+# Would be most efficient to install a for loop at this point.
 #for (SAMPLE in c(bfhe_nsw,bfhe_nt,bfhe_wa,wthe_nsw)) {
 #  paste(idx_,"SAMPLE",$av_read_length <- 220
 # )
@@ -27,37 +27,56 @@ idx_bf_wa$av_read_length <- 220
 idx_wt_nsw$av_read_length <- 220
 
 # new column = depth of coverage = (# mapped reads * read length)/scaffold length
-idx_bf_nsw$bf_nsw <- (idx_bf_nsw$X3*idx_bf_nsw$av_read_length)/(idx_bf_nsw$X2)
-idx_bf_nt$bf_nt <- (idx_bf_nt$X3*idx_bf_nt$av_read_length)/(idx_bf_nt$X2)
+idx_bf_nsw$bf_nsw <- idx_bf_nsw$X3/idx_bf_nsw$X2
+idx_bf_nt$bf_nt <- idx_bf_nt$X3/idx_bf_nt$X2
+idx_bf_wa$bf_wa <- (idx_bf_wa$X3*idx_bf_wa$av_read_length)/(idx_bf_wa$X2)
+idx_wt_nsw$wt_nsw <- (idx_wt_nsw$X3*idx_wt_nsw$av_read_length)/(idx_wt_nsw$X2)
+
+#new column =doc = (#mapped reads)/scaffold length
+idx_bf_nsw$depth_BF_nsw <- idx_bf_nsw$X3/idx_bf_nsw$X2
+idx_bf_nt$depth_BF_nt <- idx_bf_nt$X3/idx_bf_nt$X2
 idx_bf_wa$bf_wa <- (idx_bf_wa$X3*idx_bf_wa$av_read_length)/(idx_bf_wa$X2)
 idx_wt_nsw$wt_nsw <- (idx_wt_nsw$X3*idx_wt_nsw$av_read_length)/(idx_wt_nsw$X2)
 
 # histogram of read depth for female genome (from reads mapped onto a male genome)
 hist(idx_bf_nsw$bf_nsw, xlim=c(0,300), breaks=5000)
 hist(idx_bf_nsw$bf_nsw, xlim=c(0,150), breaks=20000, xlab = "bf_nsw (female) mean read depth over all scaffolds")
-summary(idx_bf_nsw$bf_nsw) # this looks weird - max is so high! mean should be ~20
+hist(idx_bf_nsw$bf_nsw, xlim=c(0,1), breaks=5000)
+summary(idx_bf_nsw$bf_nsw)
 
 # histogram of read depth for male genome (from reads mapped onto a male genome)
 hist(idx_bf_nt$bf_nt, xlim=c(0,150), breaks=20000, xlab = "bf_nt (male) mean read depth over all scaffolds")
+hist(idx_bf_nt$bf_nt, xlim=c(0,1), breaks=20000, xlab = "bf_nt (male) mean read depth over all scaffolds")
+
 summary(idx_bf_nt$bf_nt)
 
 # new dataframe: for each scaffold, average read depth for 1 female and 1 male
-data <- data.frame(scaffold = idx_bf_nsw$X1, cov_bf_nsw_female = idx_bf_nsw$bf_nsw, cov_bf_nt_male = idx_bf_nt$bf_nt)
-data$ratio_fm <- data$cov_bf_nsw_female/data$cov_bf_nt_male
-hist(data$ratio_fm,breaks = 5000, xlim = c(-1,10))
-hist(data$ratio_fm,breaks = 10000, xlim = c(0,3))
-hist(data$ratio_fm,breaks = 10000, xlim = c(0,1))
+data1 <- data.frame(scaffold = idx_bf_nsw$X1, cov_bf_nsw_female = idx_bf_nsw$bf_nsw, cov_bf_nt_male = idx_bf_nt$bf_nt)
+data1$ratio_fm <- data1$cov_bf_nsw_female/data1$cov_bf_nt_male
+hist(data1$ratio_fm,breaks = 5000, xlim = c(-1,10))
+hist(data1$ratio_fm,breaks = 10000, xlim = c(0,3))
+hist(data1$ratio_fm,breaks = 10000, xlim = c(0,1))
 # Try excluding scaffolds under a certain length
-data$scaf<-seq.int(nrow(data)) - 1 # add a new row with scaffold number
+data1$scaf<-seq.int(nrow(data1)) - 1 # add a new row with scaffold number
+data1$scaf_length<-idx_bf_nsw$X2
+#plot scaffold sizes
+plot(data1$scaf, data1$scaf_length)
+ssf <- 5000000 #scaffold size filter
+data2 <- filter(data1, scaf_length>ssf) # makes a new dataset # makes a new dataset
+hist(data2$ratio_fm,breaks = 100, xlim = c(0,3))
+#OR scaffold number filter:
+snf <- 500
+data3 <- filter(data1, scaf < snf) 
+hist(data3$ratio_fm,breaks = 100, xlim = c(0,3))
+
 
 # make a new column to mark infered z-linked scaffolds, and weird stuff.
 tl <- 0.6 # set a lower threshold, below which the scaffolds are assumed to be on z-scaffold.
 tu <- 1.2 # set an upper threshold, above which, weird stuff is happening 
 # (i.e. I don't understand why coverage would be so much higher for chromosomes on female )
 
-data$class <- if(data$ratio_fm < 1) "z-linked" else "autosomal"
-data$class <- c("z-linked", "autosomal", "weird")[ findInterval(data$ratio_fm, c(0, 0.6, 1.2, Inf)) ]
-data$class <- c("z-linked", "autosomal", "weird")[ findInterval(data$ratio_fm, c(0, tl, tu, Inf)) ]
+abline(v = tl, untf = FALSE, col = "red", lty = 2)
+data3$class <- c("z-linked", "autosomal", "weird")[ findInterval(data3$ratio_fm, c(0, tl, tu, Inf)) ]
 
 # shows the number of each class of scaffolds, restricted to a specified number of scaffolds
 count(data, class)
@@ -66,6 +85,8 @@ count(filter(data, scaf <500), class)
 count(filter(data, scaf <1000), class)
 count(filter(data, scaf <1500), class)
 count(filter(data, scaf <2000), class)
+
+count(filter(data3, scaf < snf), class)
 
 
 
