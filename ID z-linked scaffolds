@@ -1,61 +1,94 @@
-setwd("/Users/johnburley/Documents/Harvard/genome_assembly3/gatk/vcfs")
-library(vcfR)
-library(pinfsc50)
+library("dplyr")
+library(readr)
 
-test <- read.csv("test.csv", sep = ",", header = TRUE)
+# BAD: idx_bfhe_nsw76677 <- read.delim("idxstats_BFHE_NSW_76677_2.txt", header = FALSE, sep = " ")
 
-vcf_file <- system.file("extdata", "BFHE_WA336010_1_TEST.vcf.gz", package = "pinfsc50")
-vcf <- read.vcfR(vcf_file, verbose = FALSE)
-#Does not work, although the example provided online (below) does work:
-vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz", package = "pinfsc50")
-vcf <- read.vcfR(vcf_file, verbose = FALSE)
+# EASIEST WAY TO READ IN WAS FILE>IMPORT. EG:
 
-## Read in my test vcf file:
-BFWA336010_test <- read.vcfR("BFHE_WA336010_1_TEST.vcf.gz", verbose = FALSE)
-## create chromR object from my test vcf (using no fasta or annotation):
-section <- create.chromR(BFWA336010_test, name = "SECTION", seq = NULL, ann = NULL,
-                         verbose = TRUE)
-# tries to process the chromR object. Fails (possibly because there is no population data, or because no seq or ann)
-section_proc <- proc.chromR(section, win.size = 1000, verbose = TRUE)
+idx_bf_wa <- read_delim("~/Documents/Harvard/genome_assembly3/scaffold coverage/idxstats_BFHE_WA_336010.txt", 
+                                      "\t", escape_double = FALSE, col_names = FALSE)
+idx_bf_nt <- read_delim("~/Documents/Harvard/genome_assembly3/scaffold coverage/idxstats_BFHE_NT_336114.txt", 
+                          "\t", escape_double = FALSE, col_names = FALSE)
+idx_bf_nsw <- read_delim("~/Documents/Harvard/genome_assembly3/scaffold coverage/idxstats_BFHE_NSW_76677_2.txt", 
+                        "\t", escape_double = FALSE, col_names = FALSE)
+idx_wt_nsw <- read_delim("~/Documents/Harvard/genome_assembly3/scaffold coverage/idxstats_WTHE_NSW_76665.txt", 
+                        "\t", escape_double = FALSE, col_names = FALSE)
 
-head(section)
-gq <- extract.gt(section, element="GQ", as.numeric=TRUE)
-dp <- extract.gt(section, element="DP", as.numeric=TRUE)
 
-# PLOT Genotype Quality
-par( mar = c(8,4,4,2) )
-boxplot(gq, las=2, col=2:5, main="Genotype Quality (GQ)")
-# PLOT Sequence Depth
-dp2 <- dp
-dp2[ dp2 == 0 ] <- NA
-boxplot(dp2, las=2, col=2:5, main="Sequence Depth (DP)", log="y")
-abline(h=10^c(0:4), lty=3, col="#808080")
+#for (SAMPLE in c(bfhe_nsw,bfhe_nt,bfhe_wa,wthe_nsw)) {
+#  paste(idx_,"SAMPLE",$av_read_length <- 220
+# )
+#}
 
-#chrom <- masker(chrom, min_DP = 900, max_DP = 1500)
-chrom <- proc.chromR(chrom, verbose = FALSE)
+# Header: X1-sequence name, X2-sequence length, X3-# mapped reads and X4-# unmapped reads
+idx_bf_nsw$av_read_length <- 220
+idx_bf_nt$av_read_length <- 220
+idx_bf_wa$av_read_length <- 220
+idx_wt_nsw$av_read_length <- 220
 
-# From online example:
-vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz", package = "pinfsc50")
-dna_file <- system.file("extdata", "pinf_sc50.fasta", package = "pinfsc50")
-gff_file <- system.file("extdata", "pinf_sc50.gff", package = "pinfsc50")
+# new column = depth of coverage = (# mapped reads * read length)/scaffold length
+idx_bf_nsw$bf_nsw <- (idx_bf_nsw$X3*idx_bf_nsw$av_read_length)/(idx_bf_nsw$X2)
+idx_bf_nt$bf_nt <- (idx_bf_nt$X3*idx_bf_nt$av_read_length)/(idx_bf_nt$X2)
+idx_bf_wa$bf_wa <- (idx_bf_wa$X3*idx_bf_wa$av_read_length)/(idx_bf_wa$X2)
+idx_wt_nsw$wt_nsw <- (idx_wt_nsw$X3*idx_wt_nsw$av_read_length)/(idx_wt_nsw$X2)
 
-vcf <- read.vcfR(vcf_file, verbose = FALSE)
-dna <- ape::read.dna(dna_file, format = "fasta")
-gff <- read.table(gff_file, sep="\t", quote = "")
+# histogram of read depth for female genome (from reads mapped onto a male genome)
+hist(idx_bf_nsw$bf_nsw, xlim=c(0,300), breaks=5000)
+hist(idx_bf_nsw$bf_nsw, xlim=c(0,150), breaks=20000, xlab = "bf_nsw (female) mean read depth over all scaffolds")
+summary(idx_bf_nsw$bf_nsw) # this looks weird - max is so high! mean should be ~20
 
-chrom <- create.chromR(name="Supercontig", vcf=vcf, seq=dna, ann=gff, verbose=FALSE)
-#chrom <- masker(chrom, min_DP = 900, max_DP = 1500)
-chrom <- proc.chromR(chrom, verbose = TRUE)
+# histogram of read depth for male genome (from reads mapped onto a male genome)
+hist(idx_bf_nt$bf_nt, xlim=c(0,150), breaks=20000, xlab = "bf_nt (male) mean read depth over all scaffolds")
+summary(idx_bf_nt$bf_nt)
 
-head(chrom)
+# new dataframe: for each scaffold, average read depth for 1 female and 1 male
+data <- data.frame(scaffold = idx_bf_nsw$X1, cov_bf_nsw_female = idx_bf_nsw$bf_nsw, cov_bf_nt_male = idx_bf_nt$bf_nt)
+data$ratio_fm <- data$cov_bf_nsw_female/data$cov_bf_nt_male
+hist(data$ratio_fm,breaks = 5000, xlim = c(-1,10))
+hist(data$ratio_fm,breaks = 10000, xlim = c(0,3))
+hist(data$ratio_fm,breaks = 10000, xlim = c(0,1))
+# Try excluding scaffolds under a certain length
+data$scaf<-seq.int(nrow(data)) - 1 # add a new row with scaffold number
 
-gq <- extract.gt(chrom, element="GQ", as.numeric=TRUE)
-dp <- extract.gt(chrom, element="DP", as.numeric=TRUE)
+# make a new column to mark infered z-linked scaffolds, and weird stuff.
+tl <- 0.6 # set a lower threshold, below which the scaffolds are assumed to be on z-scaffold.
+tu <- 1.2 # set an upper threshold, above which, weird stuff is happening 
+# (i.e. I don't understand why coverage would be so much higher for chromosomes on female )
 
-par( mar = c(8,4,4,2) )
-boxplot(gq, las=2, col=2:5, main="Genotype Quality (GQ)")
+data$class <- if(data$ratio_fm < 1) "z-linked" else "autosomal"
+data$class <- c("z-linked", "autosomal", "weird")[ findInterval(data$ratio_fm, c(0, 0.6, 1.2, Inf)) ]
+data$class <- c("z-linked", "autosomal", "weird")[ findInterval(data$ratio_fm, c(0, tl, tu, Inf)) ]
 
-dp2 <- dp
-dp2[ dp2 == 0 ] <- NA
-boxplot(dp2, las=2, col=2:5, main="Sequence Depth (DP)", log="y")
-abline(h=10^c(0:4), lty=3, col="#808080")
+# shows the number of each class of scaffolds, restricted to a specified number of scaffolds
+count(data, class)
+count(filter(data, scaf <100), class)
+count(filter(data, scaf <500), class)
+count(filter(data, scaf <1000), class)
+count(filter(data, scaf <1500), class)
+count(filter(data, scaf <2000), class)
+
+
+
+
+### Disregard below this
+
+
+#check approx size cutoffs
+
+filter(data, idx_bf_nsw$X2)
+
+barplot(data$class[which(data$scaf < 2000),])
+barplot(prop.table(table(animals)))
+
+
+#####
+new <- cbind(data, data_no_reads)
+new$ratio_readsmapped_fm <- new$bfhe_nsw_reads_mapped/new$bfhe_nt_reads_mapped
+
+data_no_reads <- data.frame(scaffold = idx_bfhe_nsw$X1, bfhe_nsw_reads_mapped = idx_bfhe_nsw$X3, bfhe_nt_reads_mapped = idx_bfhe_nt$X3)
+hist(new$ratio_readsmapped_fm,breaks = 5000, xlim = c(0,5), add=TRUE, col="red")
+
+summary(new$ratio_fm)
+summary(new$ratio_readsmapped_fm)
+
+
