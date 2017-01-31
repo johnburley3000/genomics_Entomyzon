@@ -60,12 +60,13 @@ hist(data1$ratio_fm,breaks = 10000, xlim = c(0,1))
 data1$scaf<-seq.int(nrow(data1)) - 1 # add a new row with scaffold number
 data1$scaf_length<-idx_bf_nsw$X2
 #plot scaffold sizes
-plot(data1$scaf, data1$scaf_length)
-ssf <- 5000000 #scaffold size filter
+plot(data1$scaf, data1$scaf_length, ylim=c(0,1E4)) #there's an interesting change at cut-off at 2E3 (scaf number and size
+ssf <- 50E3 #scaffold size filter
+#the 50kb cutoff seems to have a good combo of high peaks and fewer in-betweeners
 data2 <- filter(data1, scaf_length>ssf) # makes a new dataset # makes a new dataset
-hist(data2$ratio_fm,breaks = 100, xlim = c(0,3))
+hist(data2$ratio_fm,breaks = 100, xlim = c(0,2))
 #OR scaffold number filter:
-snf <- 500
+snf <- 750
 data3 <- filter(data1, scaf < snf) 
 hist(data3$ratio_fm,breaks = 100, xlim = c(0,3))
 
@@ -88,28 +89,16 @@ count(filter(data, scaf <2000), class)
 
 count(filter(data3, scaf < snf), class)
 
+# output a list of putative z-linked chromosomes with f:m depth of coverage < tl
+# and scaffold size > ssf
+# caution: this means that scaffolds below this size should be filtered out before analyeses - they might be z-linked
+ztable <- filter(data1, ratio_fm < tl & scaf_length > ssf)
+zlist <- as.character(ztable$scaffold)
 
+stable <- filter(data1, scaf_length > ssf)
+slist <- as.character(stable$scaffold)
+write(zlist, "data_output/zlist_tu<0.6_ssf=50kb.txt", sep=",") # z-linked scaffolds
+write(slist, "data_output/slist_ssf=50kb.txt", sep=",") # big scaffolds
 
-
-### Disregard below this
-
-
-#check approx size cutoffs
-
-filter(data, idx_bf_nsw$X2)
-
-barplot(data$class[which(data$scaf < 2000),])
-barplot(prop.table(table(animals)))
-
-
-#####
-new <- cbind(data, data_no_reads)
-new$ratio_readsmapped_fm <- new$bfhe_nsw_reads_mapped/new$bfhe_nt_reads_mapped
-
-data_no_reads <- data.frame(scaffold = idx_bfhe_nsw$X1, bfhe_nsw_reads_mapped = idx_bfhe_nsw$X3, bfhe_nt_reads_mapped = idx_bfhe_nt$X3)
-hist(new$ratio_readsmapped_fm,breaks = 5000, xlim = c(0,5), add=TRUE, col="red")
-
-summary(new$ratio_fm)
-summary(new$ratio_readsmapped_fm)
-
-
+# # Notes:
+# Filter scaffolds based on length not number because they do not always correspond
