@@ -1,53 +1,23 @@
 library("dplyr")
 library("readr")
 
-# BAD: idx_bfhe_nsw76677 <- read.delim("idxstats_BFHE_NSW_76677_2.txt", header = FALSE, sep = " ")
-
 # EASIEST WAY TO READ IN WAS FILE>IMPORT. EG:
 
-idx_bf_wa <- read_delim("~/Documents/Harvard/genome_assembly3/scaffold coverage/idxstats_BFHE_WA_336010.txt", 
+idx_bf_nsw <- read_delim("~/Documents/Harvard/genome_assembly3/scaffold coverage/idxstats_BFHE_NSW_76677_2.txt", 
                                       "\t", escape_double = FALSE, col_names = FALSE)
 idx_bf_nt <- read_delim("~/Documents/Harvard/genome_assembly3/scaffold coverage/idxstats_BFHE_NT_336114.txt", 
                           "\t", escape_double = FALSE, col_names = FALSE)
-idx_bf_nsw <- read_delim("~/Documents/Harvard/genome_assembly3/scaffold coverage/idxstats_BFHE_NSW_76677_2.txt", 
-                        "\t", escape_double = FALSE, col_names = FALSE)
-idx_wt_nsw <- read_delim("~/Documents/Harvard/genome_assembly3/scaffold coverage/idxstats_WTHE_NSW_76665.txt", 
-                        "\t", escape_double = FALSE, col_names = FALSE)
-
-# Would be most efficient to install a for loop at this point.
-#for (SAMPLE in c(bfhe_nsw,bfhe_nt,bfhe_wa,wthe_nsw)) {
-#  paste(idx_,"SAMPLE",$av_read_length <- 220
-# )
-#}
-
-# Header: X1-sequence name, X2-sequence length, X3-# mapped reads and X4-# unmapped reads
-idx_bf_nsw$av_read_length <- 220
-idx_bf_nt$av_read_length <- 220
-idx_bf_wa$av_read_length <- 220
-idx_wt_nsw$av_read_length <- 220
-
-# new column = depth of coverage = (# mapped reads * read length)/scaffold length
-idx_bf_nsw$bf_nsw <- idx_bf_nsw$X3/idx_bf_nsw$X2
-idx_bf_nt$bf_nt <- idx_bf_nt$X3/idx_bf_nt$X2
-idx_bf_wa$bf_wa <- (idx_bf_wa$X3*idx_bf_wa$av_read_length)/(idx_bf_wa$X2)
-idx_wt_nsw$wt_nsw <- (idx_wt_nsw$X3*idx_wt_nsw$av_read_length)/(idx_wt_nsw$X2)
 
 #new column =doc = (#mapped reads)/scaffold length
-idx_bf_nsw$depth_BF_nsw <- idx_bf_nsw$X3/idx_bf_nsw$X2
-idx_bf_nt$depth_BF_nt <- idx_bf_nt$X3/idx_bf_nt$X2
-idx_bf_wa$bf_wa <- (idx_bf_wa$X3*idx_bf_wa$av_read_length)/(idx_bf_wa$X2)
-idx_wt_nsw$wt_nsw <- (idx_wt_nsw$X3*idx_wt_nsw$av_read_length)/(idx_wt_nsw$X2)
+idx_bf_nsw$bf_nsw <- idx_bf_nsw$X3/idx_bf_nsw$X2
+idx_bf_nt$bf_nt <- idx_bf_nt$X3/idx_bf_nt$X2
 
-# histogram of read depth for female genome (from reads mapped onto a male genome)
-hist(idx_bf_nsw$bf_nsw, xlim=c(0,300), breaks=5000)
-hist(idx_bf_nsw$bf_nsw, xlim=c(0,150), breaks=20000, xlab = "bf_nsw (female) mean read depth over all scaffolds")
-hist(idx_bf_nsw$bf_nsw, xlim=c(0,1), breaks=5000)
+# histogram of depth equivelant for female genome (from reads mapped onto a male genome)
+hist(idx_bf_nsw$bf_nsw, xlim=c(0,1), breaks=5000, ylim=c(1,600))
 summary(idx_bf_nsw$bf_nsw)
 
 # histogram of read depth for male genome (from reads mapped onto a male genome)
-hist(idx_bf_nt$bf_nt, xlim=c(0,150), breaks=20000, xlab = "bf_nt (male) mean read depth over all scaffolds")
-hist(idx_bf_nt$bf_nt, xlim=c(0,1), breaks=20000, xlab = "bf_nt (male) mean read depth over all scaffolds")
-
+hist(idx_bf_nt$bf_nt, xlim=c(0,1), breaks=50000, ylim=c(1,600))
 summary(idx_bf_nt$bf_nt)
 
 # new dataframe: for each scaffold, average read depth for 1 female and 1 male
@@ -60,9 +30,12 @@ hist(data1$ratio_fm,breaks = 10000, xlim = c(0,1))
 data1$scaf<-seq.int(nrow(data1)) - 1 # add a new row with scaffold number
 data1$scaf_length<-idx_bf_nsw$X2
 #plot scaffold sizes
+plot(data1$scaf, data1$scaf_length) 
+plot(data1$scaf, data1$scaf_length,ylim=c(0,5E4)) 
 plot(data1$scaf, data1$scaf_length, ylim=c(0,1E4)) #there's an interesting change at cut-off at 2E3 (scaf number and size
-ssf <- 50E3 #scaffold size filter
+ssf <- 10E3 #scaffold size filter, which is used in generating a filtered scaffold list
 #the 50kb cutoff seems to have a good combo of high peaks and fewer in-betweeners
+#the 10kb cutoff is around about where scaffold size drops off and flatens out
 data2 <- filter(data1, scaf_length>ssf) # makes a new dataset # makes a new dataset
 hist(data2$ratio_fm,breaks = 100, xlim = c(0,2))
 #OR scaffold number filter:
@@ -75,30 +48,37 @@ hist(data3$ratio_fm,breaks = 100, xlim = c(0,3))
 tl <- 0.6 # set a lower threshold, below which the scaffolds are assumed to be on z-scaffold.
 tu <- 1.2 # set an upper threshold, above which, weird stuff is happening 
 # (i.e. I don't understand why coverage would be so much higher for chromosomes on female )
-
 abline(v = tl, untf = FALSE, col = "red", lty = 2)
-data3$class <- c("z-linked", "autosomal", "weird")[ findInterval(data3$ratio_fm, c(0, tl, tu, Inf)) ]
+
+# Use the line above to guide cutoff of ratio to delimte z-linked scaffolds
+
+
+data2$class <- c("z-linked", "autosomal", "weird")[ findInterval(data2$ratio_fm, c(0, tl, tu, Inf)) ]
 
 # shows the number of each class of scaffolds, restricted to a specified number of scaffolds
-count(data, class)
-count(filter(data, scaf <100), class)
-count(filter(data, scaf <500), class)
-count(filter(data, scaf <1000), class)
-count(filter(data, scaf <1500), class)
-count(filter(data, scaf <2000), class)
-
-count(filter(data3, scaf < snf), class)
+count(data2, class)
+count(filter(data2, scaf <100), class)
+count(filter(data2, scaf <500), class)
+count(filter(data2, scaf <1000), class)
+count(filter(data2, scaf <1500), class)
+count(filter(data2, scaf <2000), class)
+count(filter(data2, scaf < snf), class)
 
 # output a list of putative z-linked chromosomes with f:m depth of coverage < tl
 # and scaffold size > ssf
 # caution: this means that scaffolds below this size should be filtered out before analyeses - they might be z-linked
+print(ssf)
+print(tl)
 ztable <- filter(data1, ratio_fm < tl & scaf_length > ssf)
 zlist <- as.character(ztable$scaffold)
 
 stable <- filter(data1, scaf_length > ssf)
 slist <- as.character(stable$scaffold)
-write(zlist, "data_output/zlist_tu<0.6_ssf=50kb.txt", sep=",") # z-linked scaffolds
+
+# Don't forget to change file name before writing !
+write(zlist, "data_output/zlist_tu<0.6_ssf= __ kb.txt", sep=",") # z-linked scaffolds
 write(slist, "data_output/slist_ssf=50kb.txt", sep=",") # big scaffolds
 
 # # Notes:
 # Filter scaffolds based on length not number because they do not always correspond
+
