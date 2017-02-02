@@ -6,18 +6,25 @@
 #SBATCH --mem 20000
 #SBATCH -t 5-00:00
 #SBATCH -J prep_psmc
-#SBATCH -o ./logs/prep_psmc_%A_%a.out
-#SBATCH -e ./logs/prep_psmc_%A_%a.err
+#SBATCH -o ./logs/prep_psmc_%j.out
+#SBATCH -e ./logs/prep_psmc_%j.err
 #SBATCH --constrain=holyib
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=john.burley@evobio.eu
 
-module load samtools/1.2-fasrc01  
+module load samtools/1.2-fasrc01
 module load bcftools/1.2-fasrc01
-
-#samtools mpileup -C50 -uf ../BFHE_WA336010.fasta ../../PSMC_home/bams/BFHE_WA336010-f.bam | bcftools view -c 20 | vcfutils.pl vcf2fq -d 20 -D 100 | gzip > BFHE_WA336010_dip.fq.gz
 
 SAMPLE=$1
 
-samtools mpileup -C50 -uf ../BFHE_WA336010.fasta ../../PSMC_home/bams/${SAMPLE}-f.bam | bcftools view -c 10 | vcfutils.pl vcf2fq -d 10 -D 50 | gzip > ${SAMPLE}_dip.fq.gz
+samtools mpileup -Q 30 -q 30 -u -v \
+-f ../BFHE_WA336010.fasta ../../PSMC_home/bams/${SAMPLE}-f.bam |
+bcftools call -c |
+vcfutils.pl vcf2fq -d 10 -D 50 -Q 30 > ${SAMPLE}_dip_ts.fq
+
+module load psmc/0.6.5-fasrc01
+module load gnuplot/4.6.4-fasrc01
+
+/n/home01/jtb/apps/psmc/utils/fq2psmcfa -q20 ${SAMPLE}_dip_ts.fq > ${SAMPLE}.psmcfa
+psmc -N25 -t15 -r5 -p "4+25*2+4+6" -o ${SAMPLE}.psmc ${SAMPLE}.psmcfa
 
