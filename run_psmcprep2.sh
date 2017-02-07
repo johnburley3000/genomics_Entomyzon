@@ -4,10 +4,10 @@
 #SBATCH -n 2
 #SBATCH -N 1
 #SBATCH --mem 20000
-#SBATCH -t 5-00:00
-#SBATCH -J prep_psmc
-#SBATCH -o ./logs/prep_psmc_%j.out
-#SBATCH -e ./logs/prep_psmc_%j.err
+#SBATCH -t 1-00:00
+#SBATCH -J psmc
+#SBATCH -o ./logs/psmc_%j.out
+#SBATCH -e ./logs/psmc_%j.err
 #SBATCH --constrain=holyib
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=john.burley@evobio.eu
