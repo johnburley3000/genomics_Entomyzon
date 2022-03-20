@@ -1,0 +1,6 @@
+#uniform(7.5,14)	crown	KP,TE,PNG,CY,EC,Malb,Mlun
+#uniform(6,10)	crown	Malb,Mlun
+# set a prior on the age of the root, the time that all species in the data share a common ancestor
+#lognormal(0,9.5,0.5)	crown	KP,TE,PNG,CY,EC,Malb,Mlun
+# set a prior on the divergence of the Melithreptus species
+normal(0,7.75,0.2)	crown	Malb,Mlun

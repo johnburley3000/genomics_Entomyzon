@@ -1,0 +1,9 @@
+branch	branch_descendants	Outgroup	KP	TE	EC	PNG	CY
+b2	KP,TE	nan	nan	nan	nan	nan	nan
+b3	EC,PNG,CY	nan	nan	nan	nan	nan	nan
+b4	KP	nan	nan	nan	0.0196281	0	0
+b5	TE	nan	nan	nan	0	0	0
+b6	PNG,CY	nan	0.105564	0.182767	nan	nan	nan
+b7	EC	nan	0	0	nan	nan	nan
+b8	PNG	nan	0.0266105	0.0485454	0	nan	nan
+b9	CY	nan	0	0	0.0336301	nan	nan

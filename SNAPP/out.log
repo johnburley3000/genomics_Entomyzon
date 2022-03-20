@@ -1,0 +1,16 @@
+
+VCFtools - 0.1.15
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--gzvcf /n/holylfs04/LABS/edwards_lab/Lab/jburley/BFHE_resources/VCFs/Ento_Meli_rm_snps_filt1_autos_1e5.vcf.gz
+	--minGQ 30
+	--thin 1000
+	--minQ 30
+	--max-missing 0.9
+	--remove-indels
+
+Using zlib version: 1.2.7
+After filtering, kept 26 out of 26 Individuals
+After filtering, kept 1551 out of a possible 8045784 Sites
+Run Time = 120.00 seconds

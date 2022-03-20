@@ -1,0 +1,22 @@
+  
+   --- Error using partition: bigmem
+sbatch: error: You must request more than 190GB for jobs in bigmem partition
+allocation failure: Unspecified error
+  
+   --- Error using partition: gpu
+sbatch: error: You must request a gpu using the --gres option to use gpu partition, if you have CPU work for this hardware please use serial_requeue
+allocation failure: Unspecified error
+  
+   --- Error using partition: gpu_requeue
+sbatch: error: You must request a gpu using the --gres option to use gpu_requeue partition, if you have CPU work for this hardware please use serial_requeue
+allocation failure: Unspecified error
+  
+   --- Error using partition: gpu_test
+sbatch: error: You must request a gpu using the --gres option to use gpu_test partition, if you have CPU work for this hardware please use test
+allocation failure: Unspecified error
+  
+   --- Error using partition: remoteviz
+allocation failure: Requested node configuration is not available
+  
+   --- Error using partition: test
+allocation failure: Requested time limit is invalid (missing or exceeds some limit)

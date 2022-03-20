@@ -1,0 +1,17 @@
+01_KP_336010	albi
+02_KP_335960	albi
+03_KP_335961	albi
+04_TE_336114	albi
+05_TE_22778	albi
+06_TE_22941	albi
+09_TE_29457	albi
+13_PNG_56279	gris
+14_PNG_56278	gris
+15_CY_57525	gris
+16_CY_57401	gris
+17_CY_57369	gris
+18_CY_52131	gris
+20_EC_76718	cyan
+21_EC_76649	cyan
+22_EC_76521	cyan
+23_EC_76599	cyan

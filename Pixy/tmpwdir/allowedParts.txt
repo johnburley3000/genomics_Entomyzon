@@ -1,0 +1,11 @@
+edwards
+bigmem
+gpu
+gpu_requeue
+gpu_test
+remotedesktop
+remoteviz
+serial_requeue
+shared
+test
+unrestricted
