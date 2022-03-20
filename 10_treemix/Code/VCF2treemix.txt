@@ -1,0 +1,76 @@
+Streamlined VCF to treemix steps:
+# Date: July 28
+
+# OVERVIEW
+1. Make a new VCF file by merging my best Entomyzon VCF with my Melithreptus albogularis VCF
+# this should throw out any sites that are not on both VCF files.
+# Note, that this is not the optimum approach, because many sites will be lost. For a final run, make a new VCF by running genotype GVCF for Entomyzon and Melithreptus, then filter the sites as was done for the best Entomyzon step (SNPs only, large scafs, autosomes only, hard filtering for quality)
+2. create PLINK binary files (may as well make the readable files too).
+3. use PLINK to coerce the data into allele frequencies per site per population.
+4. run the plink2treemix.py script to get the format required for treemix.
+
+############
+
+module load GATK/3.5-fasrc01 plink/1.90-fasrc01 
+
+# 1
+
+java -Xmx10g -jar /n/edwards_lab/jburley/programs/GenomeAnalysisTK.jar \
+   -T CombineVariants \
+   -R Data/BFHE336010v2.fasta \
+   --variant Results/VCFs/E_cyan_snps_rm_autos_filt_1e5bp.vcf \
+   --variant Results/VCFs/25_Malb_76665.vcf \
+   -o Results/VCFs/E_cyan_snps_rm_autos_filt_1e5bp_M_albo_combined.vcf \
+   -genotypeMergeOptions UNIQUIFY
+
+# > This might have worked. many of the positions have SNPS for either entomyzon or melithreptus. need to keep only those with snps for all.
+
+java -Xmx10g -jar /n/edwards_lab/jburley/programs/GenomeAnalysisTK.jar \
+   -T SelectVariants \
+   -R Data/BFHE336010v2.fasta \
+   -V Results/VCFs/E_cyan_snps_rm_autos_filt_1e5bp_M_albo_combined.vcf \
+   -o Results/VCFs/E_cyan_snps_rm_autos_filt_1e5bp_M_albo_combined_intersect.vcf \
+   -select 'set == "Intersection"'
+
+# Also note the combined-intersect file has far fewer sites:
+# 1,600,194 ct 7,049,004 
+# Thus, probably should re-do genotype GVCF
+
+# 2
+
+FILE=E_cyan_snps_rm_autos_filt_1e5bp_M_albo_combined_intersect
+
+# remove all of the sites with ",*" alleles (missing) from the dataset, because PLINK doesn't like this:
+cat ${FILE}.vcf | grep -v ",\*" > ${FILE}_nomissingallele.vcf
+
+# check how many sites now:
+cat ${FILE}_nomissingallele.vcf | grep -v "##" | wc -l
+# -> 1587102 SNPs
+
+# create PLINIK binary files (.nosex .log .fam .bin .bed)
+# the options --double-id --allow-extra-chr are needed due to i) having "_" in sample IDs and ii) having assembly in hundreds of scaffolds rather than 10s of chromosomes
+# --recode asks it to also make the readable files (.ped and .map) 
+# --set-missing-var-ids @:# asks it to call the first variant scaffold0_:<bp_position> and so-on. It is neccesary to have unique Variant IDs for the later steps.
+plink --vcf ${FILE}_nomissingallele.vcf --maf 0.05 --set-missing-var-ids @:# --keep-allele-order --recode --double-id --allow-extra-chr --make-bed --out ${FILE}
+
+# Make the .clst file. Caution! the description of what this file contains is unclear. Basically, use the first two columns from a .fam file, which are:
+Family ID ('FID')
+Within-family ID ('IID'; cannot be '0')
+
+example:
+cat > Code/samples4treemix4.clst 
+01_KP_336010.variant	01_KP_336010.variant	KP
+02_KP_335960.variant	02_KP_335960.variant	KP
+..
+23_EC_76599.variant	23_EC_76599.variant	EC
+24_EC_76676.variant	24_EC_76676.variant	EC
+WTHE1_220.variant2	WTHE1_220.variant2	OG
+
+plink --bfile ${FILE} --allow-extra-chr --freq --missing --within ../Code/samples4treemix4.clst -out ${FILE}_plink
+gzip ${FILE}_plink.frq.strat
+Code/plink2treemix.py ${FILE}_plink.frq.strat.gz ${FILE}_treemix.frq.gz
+
+now put the treemix.frq.qz into Data/
+
+# now ready for treemix!
+

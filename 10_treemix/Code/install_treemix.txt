@@ -1,0 +1,18 @@
+# install treemix: (use v 1.13 Nov2016 because it has important bugfixes, latest version on Odyssey is 1.12, so do local install)
+
+wget https://bitbucket.org/nygcresearch/treemix/downloads/treemix-1.13.tar.gz
+tar -xvf treemix-1.13.tar.gz
+./configure
+-> configure: error: need boost >= 1.42
+module load boost/1.50.0-fasrc01
+# now ./configure works
+make 
+make install # permission denied to create regular files in usr/bin/install
+
+- got help from RC to fix this. need to specify the path when doing ./configure, like:
+./configure --path=<> (I think this is wrong, but it's something like that.
+
+module load gcc/7.1.0-fasrc01
+export PATH=/n/home01/jtb/apps/treemix-1.13/src/
+treemix
+
