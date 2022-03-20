@@ -1,2 +1,4 @@
 # genomics_Entomyzon
-various scripts to do things from de novo genome assembly to genomics analyses
+This repository contains analysis scripts associated with the paper <add DOI here>. Below is a rough overview of contents. For further enquiries email john_burley@brown.edu
+
+  
