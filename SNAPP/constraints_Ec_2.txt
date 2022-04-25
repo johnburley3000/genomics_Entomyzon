@@ -1,0 +1,4 @@
+# prior on age of root (rough estimate from Toon et al)
+lognormal(0,1.8,0.4)	crown	KP,TE,PNG,CY,EC
+monophyletic	NA	PNG,CY
+monophyletic	NA	PNG,CY,EC	
