@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH -p shared
-#SBATCH -n 1
-#SBATCH -N 1
+#SBATCH --ntasks=1 
+#SBATCH --cpus-per-task=24
 #SBATCH --mem 20000
 #SBATCH -t 5-02:00
-#SBATCH -J SNAPP
-#SBATCH -o ./Logs/SNAPP_%j.out
-#SBATCH -e ./Logs/SNAPP_%j.err
+#SBATCH -J SNAPPr
+#SBATCH -o ./Logs/SNAPPr_%j.out
+#SBATCH -e ./Logs/SNAPPr_%j.err
 
 # RUN: sbatch Code/run_beast_Chr1a_v1.sbatch
 
@@ -27,7 +27,7 @@ LEN=5e6
 # max number of SNPs to translate to the xml
 SITES=3500
 #name of the constraits file
-CONS=constraints_2d
+CONS=constraints_Ec_2
 # generation time in years
 GEN=2.0
 

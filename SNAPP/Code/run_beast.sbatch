@@ -1,13 +1,12 @@
 #!/bin/bash
 #SBATCH -p shared
-#SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem 10000
+#SBATCH --cpus-per-task=24
+#SBATCH --mem 20000
 #SBATCH -t 6-02:00
-#SBATCH -J SNAPP_D
-#SBATCH -o ./Logs/SNAPP_D_%j.out
-#SBATCH -e ./Logs/SNAPP_D_%j.err
+#SBATCH -J SNAPPr2
+#SBATCH -o ./Logs/SNAPPr3_%j.out
+#SBATCH -e ./Logs/SNAPPr3_%j.err
 
 # RUN: sbatch Code/run_beast.sbatch
 
@@ -18,7 +17,8 @@ SCRATCH=/n/holyscratch01/edwards_lab/jburley/BFHE2021/SNAPP
 LAB=/n/holylfs04/LABS/edwards_lab/Lab/jburley/BFHE_ms2021/SNAPP
 cd $SCRATCH
 
-STUB=E_cyan_24_hf_snps_rm_autos_1e5bp_nosexseg_17males_thin  # corresponds to a prepared VCF
+#STUB=E_cyan_24_hf_snps_rm_autos_1e5bp_nosexseg_17males_thin  # corresponds to a prepared VCF
+STUB=males_Ec_Chr1A
 ind=17 # indicates number of samples, and corresponds to a samples*.txt
 
 # random seed generator
@@ -27,9 +27,9 @@ SEED=123
 LENGTH=5000000
 LEN=5e6
 # max number of SNPs to translate to the xml
-SITES=3500
+SITES=4000
 #name of the constraits file
-CONS=constraints_Ec_1
+CONS=constraints_Ec_4
 # generation time in years
 GEN=2.0
 
