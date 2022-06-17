@@ -33,7 +33,8 @@ CONS=constraints_Ec_4
 # generation time in years
 GEN=2.0
 
-# prepare the XML file using Mach's ruby script:
+# prepare the XML file using ruby script from Stange et al. (2018):
+# wget https://raw.githubusercontent.com/mmatschiner/snapp_prep/master/snapp_prep.rb
 ruby ${LAB}/snapp_prep/snapp_prep.rb \
 --analysis SNAPP \
 --vcf ${LAB}/${STUB}.vcf \
